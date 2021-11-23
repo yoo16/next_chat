@@ -2,7 +2,18 @@ import Head from 'next/head'
 import Image from 'next/image'
 import SideMenu from '../components/SideMenu'
 import styles from '../styles/Home.module.css'
+import Loading from '../components/Loading'
 
+// import { GetServerSideProps } from "next"
+
+// export const getServerSideProps = async (ctx) => {
+//     const count = await prisma.user.count();
+//     return {
+//         props: {
+//             count,
+//         },
+//     }
+// }
 
 export default function Home() {
     return (
@@ -18,4 +29,5 @@ export default function Home() {
             <h1>Next Chat</h1>
         </div>
     )
+
 }
