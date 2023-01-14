@@ -18,7 +18,7 @@ const io = require('socket.io')(http, {
 const uuidv4 = require('uuid').v4
 
 var users = {}
-var userList = []
+var userIndex = 0
 
 const logout = (socket) => {
     var user = fetchUser(socket);
@@ -38,28 +38,28 @@ const fetchUser = (socket) => {
 
 io.on('connection', (socket) => {
     socket.on('message', (data) => {
+        console.log('message')
         if (data.message) {
-            data.user_name = users[socket.id]
+            data.user = fetchUser(socket)
             data.datetime = Date.now();
             io.emit('message', data);
         }
     })
 
+    socket.on("join", (roomId) => {
+        socket.join(roomId);
+        console.log("joined room!");
+    });
+
     socket.on('auth', (user) => {
         if (users[socket.id]) return;
-        const userCount = Object.keys(users).length
-        const number = (userCount + 6) % 6 + 1
-        console.log(userCount)
+        const number = (userIndex + 6) % 6 + 1
+        userIndex++
 
         user.id = socket.id
         user.token = uuidv4();
         user.icon = 'images/users/' + number + ".png"
         users[socket.id] = user
-
-        userList = []
-        for (const id in users) {
-            userList.push(users[id])
-        }
 
         socket.emit('auth', { user: user, users: users });
         socket.broadcast.emit('user_joined', { user: user, users: users });

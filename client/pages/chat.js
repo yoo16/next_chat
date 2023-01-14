@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router'
 import io from "socket.io-client"
 
@@ -19,21 +19,17 @@ const icons = [
     '1.png', '2.png', '3.png', '4.png', '5.png', '6.png',
 ]
 
+const socket = io(SERVER_URL)
+
 function chat() {
-    const [socket, _] = useState(() => io(SERVER_URL))
     const [newChat, setNewChat] = useState('')
     const [chats, setChats] = useState([])
     const [user, setUser] = useState({ id: '', name: '' })
     const [users, setUsers] = useState([])
-    // const [users, setUsers] = useState({})
     const [visible, setVisible] = useState(false)
     const router = useRouter()
 
-    useEffect(() => {
-        if (router.asPath !== router.route) {
-            auth(router.query.name)
-        }
-    }, [router]);
+    const webSocketRef = useRef()
 
     const auth = (name) => {
         if (user.id) return
@@ -43,12 +39,15 @@ function chat() {
     }
 
     const sendChat = () => {
+        console.log('sendChat')
         if (newChat) {
-            socket.emit('message', {
+            const data = {
                 user: user,
                 message: newChat
-            })
-            setNewChat({ message: '' })
+            }
+            socket.emit('message', data)
+            //setNewChat({ message: '' })
+            setVisible(false)
         }
     }
 
@@ -64,9 +63,10 @@ function chat() {
             var base64 = canvas.toDataURL('image/png')
             var data = { user: user, image: base64 }
             socket.emit('upload_stamp', data)
+            canvas = null
+            ctx = null
         }
     }
-
     const logout = () => {
         if (user.id) {
             socket.emit('logout')
@@ -74,81 +74,90 @@ function chat() {
         }
     }
 
+    useEffect(() => {
+        if (router.asPath !== router.route) {
+            auth(router.query.name)
+        }
+    }, [router]);
+
     // Socket.io
-    socket.on('auth', (data) => {
-        if (data) {
-            setUser(data.user)
-            setUsers(data.users)
-        }
-    })
+    useEffect(() => {
+        socket.on('auth', (data) => {
+            console.log('auth')
+            if (data) {
+                setUser(data.user)
+                setUsers(data.users)
+            }
+        })
+        socket.on('user_joined', (data) => {
+            console.log('user_joined')
+            if (data) {
+                setUsers(data.users)
+            }
+        })
+        socket.on('user_left', (data) => {
 
-    socket.on('user_joined', (data) => {
-        if (data) {
-            setUsers(data.users)
-        }
-    })
+        })
+        socket.on('disconnect', () => {
+            logout()
+        })
+    }, [])
 
-    socket.on('message', (data) => {
-        if (data.message) {
-            setChats([...chats, data])
-        }
-    })
-
-    socket.on('upload_stamp', (data) => {
-        if (data.image) {
-            setChats([...chats, data])
-        }
-    })
-
-    socket.on('user_left', (data) => {
-    })
-
-    socket.on('disconnect', () => {
-        console.log('disconnect!!!')
-        logout()
-    })
+    useEffect(() => {
+        socket.on('message', (data) => {
+            console.log('client message')
+            setChats((prev) => [...prev, data])
+        })
+        socket.on('upload_stamp', (data) => {
+            setChats((prev) => [...prev, data])
+        })
+    }, [])
 
     return (
         <div className={styles.container}>
             <h1 className="flex justify-center m-3 text-3xl">Chat</h1>
-            <div className="flex justify-end">
-                <div className={chatStyles.userIcon}>
-                    <img
-                        className="h-10 w-10 object-cover rounded-full"
-                        src={user.icon} />
-                </div>
-                {user.name}さん
-                <IconButton onClick={logout}>
-                    <LogoutIcon />
-                </IconButton>
-            </div>
 
-            <div className="chatList">
-                <input
-                    onChange={(e) => { setNewChat(e.target.value) }}
-                    className="w-50 block bg-white w-full border rounded-md my-3 py-3 pl-2 pr-1"
-                    type="text"
-                    placeholder="メッセージ"
-                    value={newChat.message}
-                />
-
-                <div className="flex">
-                    <IconButton onClick={() => setVisible(!visible)}>
-                        <ImageIcon />
+            <div className="sticky top-0 z-50 bg-white">
+                <div className="flex justify-end">
+                    <div className={chatStyles.userIcon}>
+                        <img
+                            className="h-10 w-10 object-cover rounded-full"
+                            src={user.icon} />
+                    </div>
+                    {user.name}さん
+                    <IconButton onClick={logout}>
+                        <LogoutIcon />
                     </IconButton>
+                </div>
 
-                    <button
-                        className="w-40 bg-blue-500 mr-3 p-1 text-white rounded hover:bg-blue-700 hover:shadow-xl"
-                        onClick={sendChat}
-                        disabled={newChat == ''}>
-                        Send
-                    </button>
+                <div>
+                    <div className="flex">
+                        <input
+                            onChange={(e) => { setNewChat(e.target.value) }}
+                            className="w-50 block bg-white w-full border py-3 pl-2 pr-1"
+                            type="text"
+                            placeholder="メッセージ"
+                            value={newChat.message}
+                        />
+                        <button
+                            className="w-40 bg-blue-500 p-1 text-white hover:bg-blue-700 hover:shadow-xl"
+                            onClick={sendChat}
+                            disabled={newChat == ''}>
+                            Send
+                        </button>
+                    </div>
+
+                    <div className="flex">
+                        <IconButton onClick={() => setVisible(!visible)}>
+                            <ImageIcon />
+                        </IconButton>
+                    </div>
                 </div>
 
                 <div className="flex">
-                    {(visible) && stamps.map((image, key) => {
+                    {(visible) && stamps.map((image, index) => {
                         return (
-                            <div>
+                            <div key={index}>
                                 <img
                                     onClick={(e) => { sendStamp(e.target.src) }}
                                     src={`/images/stamp/${image}`} width="120"
@@ -161,7 +170,7 @@ function chat() {
 
 
             <div className="grid grid-cols-4">
-                <div className="col-span-3 mr-2">
+                <div className="col-span-3 mr-2 flex flex-col-reverse">
                     {chats.map((data, key) => {
                         return (
                             <div className={chatStyles.chat} key={key}>
@@ -173,35 +182,38 @@ function chat() {
                                     </div>
                                     <div className={chatStyles.userName}>
                                         {data.user.name}
+                                        :
+                                        {key}
                                     </div>
                                 </div>
-                                <di className={chatStyles.chatMessage}>
+                                <div className={chatStyles.chatMessage}>
                                     {
                                         (data.image) ?
                                             <img src={data.image} width="150" />
                                             :
                                             data.message
                                     }
-                                </di>
+                                </div>
                             </div>
                         )
                     })}
                 </div>
 
                 <div className="col-span-1 mt-2">
-                    <ul class="max-w-md divide-y divide-gray-200 dark:divide-gray-700">
-                        {Object.keys(users).map((key) => {
+                    <ul className="max-w-md divide-y divide-gray-200 dark:divide-gray-700">
+                        {Object.keys(users).map((key, index) => {
                             return (
-                                <li class="p-3">
-                                    <div class="flex">
-                                        <div class="w-20">
+                                <li className="p-3" key={index}>
+                                    <div className="flex">
+                                        <div className="w-20">
                                             <img
                                                 src={users[key].icon}
                                                 className="h-10 w-10 object-cover rounded-full"
                                             />
                                         </div>
-                                        <div class="text-base text-gray-500">
+                                        <div className="text-base text-gray-500">
                                             {users[key].name}
+                                            :{index}
                                         </div>
                                     </div>
                                 </li>
