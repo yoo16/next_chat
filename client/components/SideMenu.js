@@ -5,7 +5,6 @@ import MoreVertIcon from '@material-ui/icons/MoreVert'
 import axios from 'axios'
 import { useState } from 'react';
 
-
 function SideMenu() {
     //TODO model
     let defaultUser = { id: 0, name: "", email: "" }
@@ -70,10 +69,10 @@ const Header = styled.div`
     border-bottom: 1px solid whitesmoke;
 `;
 const UserAvatar = styled(Avatar)`
-    cursor: pointer;
-    :hover {
-        opacity: 0.8;
-    }
+     cursor: pointer;
+     :hover {
+         opacity: 0.8;
+     }
 `;
 
 const Icons = styled.div``;
