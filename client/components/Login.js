@@ -6,24 +6,33 @@ import { useRouter } from "next/router";
 import axios from 'axios'
 import { useState } from 'react';
 
-function SideMenu() {
+function Login() {
     const router = useRouter()
     const [user, setUser] = useState({
         id: 0, name: ""
     })
 
-    const startChat = () => {
+    const input = async () => {
         const name = prompt('名前を入力してください。')
         if (!name) return;
-        router.push({
-            pathname: "/chat",
-            query: { name: name }
-        })
+        await join(name)
     }
 
     const join = async (name) => {
-        // let result = await axios.get('/api/user/findEmail/' + email);
+        const result = await axios.get('/api/user/findEmail/' + email);
+        const user = result.data
+        if (!user.id) user = createUser(name)
+        setUser(user)
+    }
+
+    const createUser = async (name) => {
+        const user = {
+            name: name,
+        }
+        // result = await axios.post('/api/user/create', post)
         // let user = result.data
+        router.push("/chat")
+        return user
     }
 
     return (
@@ -39,6 +48,8 @@ function SideMenu() {
                     </IconButton>
                 </Icons>
             </Header>
+
+            <div>{user.email}</div>
             <ChatButton onClick={startChat}>Start</ChatButton>
         </Container>
     )

@@ -1,0 +1,28 @@
+.chat {
+  padding: 10px;
+}
+
+.icon {
+  width: 32px;
+}
+
+.balloonLeft {
+  position: relative;
+  display: inline-block;
+  padding: 7px 10px;
+  width: 90%;
+  border: solid 3px #eaeff4;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.balloonLeft:before {
+  content: "";
+  position: absolute;
+  top: -24px;
+  left: 5%;
+  margin-left: -15px;
+  border: 12px solid transparent;
+  border-bottom: 12px solid #eaeff4;
+  z-index: 2;
+}
