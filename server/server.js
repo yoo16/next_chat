@@ -70,11 +70,6 @@ io.on('connection', (socket) => {
         io.emit('upload_stamp', data);
     });
 
-    socket.on('upload_image', (data) => {
-        data.datetime = Date.now();
-        io.emit('load_image', data);
-    });
-
     socket.on('logout', () => {
         logout(socket)
     });

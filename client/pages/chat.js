@@ -46,8 +46,7 @@ function chat() {
                 message: newChat
             }
             socket.emit('message', data)
-            //setNewChat({ message: '' })
-            setVisible(false)
+            setNewChat({ message: '' })
         }
     }
 
@@ -103,13 +102,18 @@ function chat() {
         })
     }, [])
 
+    const saveChat = (data) => {
+        setChats((prev) => [...prev, data])
+        setVisible(false)
+    }
+
     useEffect(() => {
         socket.on('message', (data) => {
             console.log('client message')
-            setChats((prev) => [...prev, data])
+            saveChat(data)
         })
         socket.on('upload_stamp', (data) => {
-            setChats((prev) => [...prev, data])
+            saveChat(data)
         })
     }, [])
 
@@ -182,8 +186,6 @@ function chat() {
                                     </div>
                                     <div className={chatStyles.userName}>
                                         {data.user.name}
-                                        :
-                                        {key}
                                     </div>
                                 </div>
                                 <div className={chatStyles.chatMessage}>
@@ -213,7 +215,6 @@ function chat() {
                                         </div>
                                         <div className="text-base text-gray-500">
                                             {users[key].name}
-                                            :{index}
                                         </div>
                                     </div>
                                 </li>
