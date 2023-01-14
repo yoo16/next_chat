@@ -14,8 +14,6 @@ export default function Home() {
             </Head>
 
             <SideMenu></SideMenu>
-
-            <h1>Next Chat</h1>
         </div>
     )
 

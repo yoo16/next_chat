@@ -1,11 +1,8 @@
-import '../styles/globals.css'
-import { RecoilRoot } from 'recoil'
+import globalStyles from '../styles/globals.css'
 
 function MyApp({ Component, pageProps }) {
     return (
-        <RecoilRoot>
-            <Component {...pageProps} />
-        </RecoilRoot>
+        <Component {...pageProps} />
     )
 }
 

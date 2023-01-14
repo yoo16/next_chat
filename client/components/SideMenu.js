@@ -1,10 +1,9 @@
+import { useRouter } from "next/router";
+import { useState } from 'react';
 import { Avatar, Button, IconButton } from "@material-ui/core"
 import styled from "styled-components"
 import ChatIcon from '@material-ui/icons/Chat'
 import MoreVertIcon from '@material-ui/icons/MoreVert'
-import { useRouter } from "next/router";
-import axios from 'axios'
-import { useState } from 'react';
 
 function SideMenu() {
     const router = useRouter()
@@ -21,11 +20,6 @@ function SideMenu() {
         })
     }
 
-    const join = async (name) => {
-        // let result = await axios.get('/api/user/findEmail/' + email);
-        // let user = result.data
-    }
-
     return (
         <Container>
             <Header>
@@ -39,7 +33,9 @@ function SideMenu() {
                     </IconButton>
                 </Icons>
             </Header>
-            <ChatButton onClick={startChat}>Start</ChatButton>
+
+            <ChatButton onClick={startChat}>Login</ChatButton>
+
         </Container>
     )
 }
@@ -63,10 +59,10 @@ const UserAvatar = styled(Avatar)`
      :hover {
          opacity: 0.8;
      }
-`;
+`
 
-const Icons = styled.div``;
+const Icons = styled.div``
 
 const ChatButton = styled(Button)`
     width: 100%;
-`;
+`

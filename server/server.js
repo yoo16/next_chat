@@ -1,5 +1,6 @@
 const express = require('express')
 const dotenv = require('dotenv');
+
 dotenv.config();
 const host = process.env.SERVER_HOST
 const port = process.env.SERVER_PORT
@@ -16,54 +17,57 @@ const io = require('socket.io')(http, {
 })
 const uuidv4 = require('uuid').v4
 
-var users = {};
+var users = {}
+var userList = []
 
-logout = (socket) => {
-    console.log('logout');
-
+const logout = (socket) => {
     var user = fetchUser(socket);
     if (!user) return;
 
-    //ユーザ削除
     delete users[socket.id];
-
-    //送信元以外全てのクライアントに送信
     socket.broadcast.emit('user_left', {
-        username: user.name,
+        user: user,
         users: users,
-    });
+    })
 }
 
-fetchUser = (socket) => {
+const fetchUser = (socket) => {
     if (!users) return;
     return users[socket.id];
 }
 
-//connection イベント 
 io.on('connection', (socket) => {
-    // client から server のメッセージ
     socket.on('message', (data) => {
         if (data.message) {
-            console.log(data)
             data.user_name = users[socket.id]
             data.datetime = Date.now();
+            io.emit('message', data);
         }
-        io.emit('message', data);
     })
 
     socket.on('auth', (user) => {
-        if (user.token) return;
+        if (users[socket.id]) return;
+        const userCount = Object.keys(users).length
+        const number = (userCount + 6) % 6 + 1
+        console.log(userCount)
+
         user.id = socket.id
         user.token = uuidv4();
-        users[socket.id] = user;
-        socket.emit('auth', {user: user});
-        socket.broadcast.emit('user_joined', {users: users});
+        user.icon = 'images/users/' + number + ".png"
+        users[socket.id] = user
+
+        userList = []
+        for (const id in users) {
+            userList.push(users[id])
+        }
+
+        socket.emit('auth', { user: user, users: users });
+        socket.broadcast.emit('user_joined', { user: user, users: users });
     });
 
     socket.on('upload_stamp', (data) => {
-        console.log('upload_stamp');
         data.datetime = Date.now();
-        io.emit('load_stamp', data);
+        io.emit('upload_stamp', data);
     });
 
     socket.on('upload_image', (data) => {
@@ -72,9 +76,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('logout', () => {
-        logout(socket);
+        logout(socket)
     });
 
+    socket.on('disconnect', () => {
+        logout(socket)
+    });
 })
 
 http.listen(port, host, () => {
