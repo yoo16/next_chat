@@ -24,7 +24,7 @@ const socket = io(SERVER_URL)
 function chat() {
     const [newChat, setNewChat] = useState('')
     const [chats, setChats] = useState([])
-    const [user, setUser] = useState({ id: '', name: '' })
+    const [user, setUser] = useState({})
     const [users, setUsers] = useState([])
     const [visible, setVisible] = useState(false)
     const router = useRouter()
