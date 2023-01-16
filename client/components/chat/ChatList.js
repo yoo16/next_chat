@@ -2,7 +2,7 @@ import React from 'react'
 import styles from '../../styles/Chat.module.css'
 import { ChatUser } from './ChatUser'
 
-export const ChatList = ({ chats }) => {
+export const ChatList = ({ chats, user }) => {
     const dateFormat = (datetime) => {
         if (!datetime) return
         return new Date(datetime).toLocaleString('ja-JP')
@@ -13,13 +13,13 @@ export const ChatList = ({ chats }) => {
                 return (
                     <div className={styles.chat} key={key}>
                         {data.user && <ChatUser user={data.user} />}
-                        <div className={styles.chatMessage}>
+                        <div className={`${styles.chatMessage} ${data.user.id == user.id ? styles.self : ""}`}>
                             <div>
                                 {data.image && <img src={data.image} />}
                                 {data.message}
                             </div>
 
-                            <div className="flex justify-end text-slate-500">
+                            <div className="flex justify-end">
                                 {dateFormat(data.datetime)}
                             </div>
                         </div>

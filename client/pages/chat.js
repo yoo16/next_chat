@@ -132,7 +132,7 @@ function chat() {
                 </div>
 
                 <div className="grid grid-cols-4">
-                    <ChatList chats={chats}></ChatList>
+                    <ChatList chats={chats} user={user}></ChatList>
                     <UserList users={users}></UserList>
                 </div>
 
