@@ -1,34 +1,53 @@
-const express = require('express')
 const dotenv = require('dotenv');
-
 dotenv.config();
-const host = process.env.SERVER_HOST
-const port = process.env.SERVER_PORT
+const SERVER_HOST = process.env.SERVER_HOST
+const SERVER_PORT = process.env.SERVER_PORT
 const CLIENT_HOST = process.env.CLIENT_HOST
 const CLIENT_PORT = process.env.CLIENT_PORT
-const CLIENT_URL = "http://" + CLIENT_HOST + ":" + CLIENT_PORT
 
+const express = require('express')
+const uuidv4 = require('uuid').v4
 const app = express()
 const http = require('http').createServer(app)
-const io = require('socket.io')(http, {
+
+const CLIENT_URL = "http://" + CLIENT_HOST + ":" + CLIENT_PORT
+const io = new require('socket.io')(http, {
     cors: {
         origin: [CLIENT_URL]
     }
 })
-const uuidv4 = require('uuid').v4
 
-var users = {}
-var userIndex = 0
+var users = { }
+
+const login = (socket ,user) => {
+    if (users[socket.id]) return;
+
+    user.id = socket.id
+    user.token = uuidv4();
+    users[socket.id] = user
+
+    var message = user.name + "さんが、入室しました"
+    var data = {
+        user: user,
+        users: users,
+        message: message,
+        datetime: Date.now(),
+    }
+    socket.emit('auth', data);
+    socket.broadcast.emit('user_joined', data);
+}
 
 const logout = (socket) => {
-    var user = fetchUser(socket);
+    const user = fetchUser(socket);
     if (!user) return;
 
     delete users[socket.id];
-    socket.broadcast.emit('user_left', {
-        user: user,
+    var message = user.name + "さんが、退出しました"
+    var data = {
+        message: message,
         users: users,
-    })
+    }
+    socket.broadcast.emit('user_left', data)
 }
 
 const fetchUser = (socket) => {
@@ -36,9 +55,9 @@ const fetchUser = (socket) => {
     return users[socket.id];
 }
 
+// SocketIO
 io.on('connection', (socket) => {
     socket.on('message', (data) => {
-        console.log('message')
         if (data.message) {
             data.user = fetchUser(socket)
             data.datetime = Date.now();
@@ -48,21 +67,10 @@ io.on('connection', (socket) => {
 
     socket.on("join", (roomId) => {
         socket.join(roomId);
-        console.log("joined room!");
     });
 
     socket.on('auth', (user) => {
-        if (users[socket.id]) return;
-        const number = (userIndex + 6) % 6 + 1
-        userIndex++
-
-        user.id = socket.id
-        user.token = uuidv4();
-        user.icon = 'images/users/' + number + ".png"
-        users[socket.id] = user
-
-        socket.emit('auth', { user: user, users: users });
-        socket.broadcast.emit('user_joined', { user: user, users: users });
+        login(socket, user)
     });
 
     socket.on('upload_stamp', (data) => {
@@ -79,6 +87,6 @@ io.on('connection', (socket) => {
     });
 })
 
-http.listen(port, host, () => {
-    console.log(`listening on http://${host}:${port}`)
+http.listen(SERVER_PORT, SERVER_HOST, () => {
+    console.log(`listening on http://${SERVER_HOST}:${SERVER_PORT}`)
 })

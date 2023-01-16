@@ -38,7 +38,6 @@ function Login() {
     return (
         <Container>
             <Header>
-                <UserAvatar />
                 <Icons>
                     <IconButton>
                         <ChatIcon />
@@ -68,12 +67,6 @@ const Header = styled.div`
     padding: 15px;
     height: 80px;
     border-bottom: 1px solid whitesmoke;
-`;
-const UserAvatar = styled(Avatar)`
-     cursor: pointer;
-     :hover {
-         opacity: 0.8;
-     }
 `;
 
 const Icons = styled.div``;
